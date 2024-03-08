@@ -32,10 +32,23 @@ export type TextEditorElement = EditorElementBase<
   }
 >;
 
+export type ShapeEditorElement = EditorElementBase<
+  "rect" | 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
+  { 
+    fill: string;
+    width: number;
+    height: number;
+    radius: number;
+    strokeWidth: number;
+    stroke: string;
+   }
+>;
+
 export type EditorElement =
   | VideoEditorElement
   | ImageEditorElement
   | AudioEditorElement
+  | ShapeEditorElement
   | TextEditorElement;
 
 export type Placement = {
@@ -107,4 +120,6 @@ export type MenuOption =
   | "Export"
   | "Animation"
   | "Effect"
+  | "Shapes"
+  | "Colour"
   | "Fill";

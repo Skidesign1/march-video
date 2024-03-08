@@ -12,13 +12,19 @@ import {
   MdOutlineFormatColorFill,
   MdMovieFilter,
 } from "react-icons/md";
+
+import {
+  IoShapesOutline,
+  IoColorPaletteOutline
+} from "react-icons/io5"
+
 import { Store } from "@/store/Store";
 
 export const Menu = observer(() => {
   const store = React.useContext(StoreContext);
 
   return (
-    <ul className=" h-full">
+    <ul className="">
       {MENU_OPTIONS.map((option) => {
         const isSelected = store.selectedMenuOption === option.name;
         return (
@@ -76,6 +82,20 @@ const MENU_OPTIONS = [
     icon: MdTitle,
     action: (store: Store) => {
       store.setSelectedMenuOption("Text");
+    },
+  },
+  {
+    name: "Shapes",
+    icon: IoShapesOutline,
+    action: (store: Store) => {
+      store?.setSelectedMenuOption("Shapes");
+    },
+  },
+  {
+    name: "Colour",
+    icon: IoColorPaletteOutline,
+    action: (store: Store) => {
+      store?.setSelectedMenuOption("Colour");
     },
   },
   {

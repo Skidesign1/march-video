@@ -10,49 +10,29 @@ const TEXT_RESOURCES = [
     fontWeight: 600,
   },
   {
-    name: "Subtitle",
-    fontSize: 16,
-    fontWeight: 600,
-  },
-  {
-    name: "Body",
+    name: "Body Text",
     fontSize: 14,
     fontWeight: 400,
   },
   {
-    name: "Caption",
-    fontSize: 12,
+    name: "Call to Action",
+    fontSize: 14,
     fontWeight: 400,
   },
   {
-    name: "Heading 1",
-    fontSize: 24,
-    fontWeight: 800,
-  },
-  {
-    name: "Heading 2",
-    fontSize: 20,
-    fontWeight: 800,
-  },
-  {
-    name: "Heading 3",
-    fontSize: 18,
-    fontWeight: 800,
-  },
-  {
-    name: "Heading 4",
-    fontSize: 16,
-    fontWeight: 800,
-  },
-  {
-    name: "Heading 5",
+    name: "Phone Number",
     fontSize: 14,
-    fontWeight: 800,
+    fontWeight: 400,
   },
   {
-    name: "Heading 6",
-    fontSize: 12,
-    fontWeight: 800,
+    name: "Email",
+    fontSize: 14,
+    fontWeight: 400,
+  },
+  {
+    name: "Website",
+    fontSize: 14,
+    fontWeight: 400,
   },
 ];
 

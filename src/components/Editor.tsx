@@ -50,11 +50,10 @@ export const Editor = observer(() => {
   }, []);
   return (
     <>
-    <div className="flex flex-col items-center justify-center gap-2 py-3 bg-slate-200">
-      <img className="h-[40px] w-[40px]" src='favicon.png' alt="logo" />
-      <p className="font-semibold">SKYE<span className="text-blue-500">STUDIO</span></p>
+    <div className="flex flex-col  items-start  gap-2 py-3 bg-slate-200">
+      <img className="h-[40px] " src='Logo.png' alt="logo" />
     </div>
-      <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] h-[100svh]">
+      <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] ">
       <div className="tile row-span-2 flex flex-col bg-slate-200">
         <Menu />
       </div>
