@@ -22,12 +22,18 @@ export const EditorWithStore = () => {
 }
 
 export const Editor = observer(() => {
+  const[portrait, setPortrait]=useState(false)
   const store = React.useContext(StoreContext);
+
+  const toggle = ()=>{
+    setPortrait(!portrait)
+  }
+
 
   useEffect(() => {
     const canvas = new fabric.Canvas("canvas", {
       height: 500,
-      width: 800,
+      width:portrait?400:800,
       backgroundColor: "#ededed",
     });
     fabric.Object.prototype.transparentCorners = false;
@@ -41,17 +47,30 @@ export const Editor = observer(() => {
         store.setSelectedElement(null);
       }
     });
+    
+    canvas.on("object:modified",function name(options) {
+      console.log(options)
+      let obj=options.target
+      if(obj instanceof fabric.Text){
+        obj.set('fill',obj.fill)
+        // obj.set('fill','yellow')
+        console.log(obj.fill)
+        // store.refreshElements(obj.fill?.toString())
+      }
+    })
 
     store.setCanvas(canvas);
     fabric.util.requestAnimFrame(function render() {
+      // console.log("fbric rerendering")
       canvas.renderAll();
       fabric.util.requestAnimFrame(render);
     });
-  }, []);
+  }, [portrait]);
   return (
     <>
-    <div className="flex flex-col  items-start  gap-2 py-3 bg-slate-200">
+    <div className="flex  justify-between items-center  gap-2 py-3 bg-slate-200">
       <img className="h-[40px] " src='Logo.png' alt="logo" />
+      <button onClick={toggle}>{portrait?'Port':'lndscpe'}</button>
     </div>
       <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] ">
       <div className="tile row-span-2 flex flex-col bg-slate-200">

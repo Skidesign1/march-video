@@ -311,7 +311,15 @@ export class Store {
   setEditorElements(editorElements: EditorElement[]) {
     this.editorElements = editorElements;
     this.updateSelectedElement();
-    this.refreshElements();
+    // console.log(editorElements)
+    //select element in focus
+    const focusedElement = editorElements[editorElements.length-1] 
+    // if(focusedElement.type==='text'){
+    //   this.refreshElements("white");
+    // }
+    // else{
+    //   this.refreshElements()
+    // }
     // this.refreshAnimations();
   }
 
@@ -344,7 +352,14 @@ export class Store {
 
   addEditorElement(editorElement: EditorElement) {
     this.setEditorElements([...this.editorElements, editorElement]);
-    this.refreshElements();
+    
+    if(editorElement.type==='text'||"shape"){
+      this.refreshElements("white");
+      // console.log(editorElement)
+    }
+    else{
+      this.refreshElements()
+    }
     this.setSelectedElement(this.editorElements[this.editorElements.length - 1]);
   }
 
@@ -966,7 +981,9 @@ export class Store {
     })
   }
 
-  refreshElements() {
+  refreshElements(currentColour?:(string | undefined)) {
+    console.log("refreshing..."  +currentColour)
+    
     const store = this;
     if (!store.canvas) return;
     const canvas = store.canvas;
@@ -1111,6 +1128,9 @@ export class Store {
           break;
         }
         case "text": {
+          // console.log("refreshing text...."+element)
+          // console.log(element.fabricObject?.fill)
+
           const textObject = new fabric.Textbox(element.properties.text, {
             name: element.id,
             left: element.placement.x,
@@ -1125,10 +1145,12 @@ export class Store {
             objectCaching: false,
             selectable: true,
             lockUniScaling: true,
-            fill: "#ffffff",
+            // fill:currentColour
+            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
           });
           element.fabricObject = textObject;
-          canvas.add(textObject);
+          canvas.add( textObject);
+          // console.log("text-object",textObject)
           canvas.on("object:modified", function (e) {
             if (!e.target) return;
             const target = e.target;
