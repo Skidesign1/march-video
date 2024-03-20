@@ -2,7 +2,7 @@ import { makeAutoObservable } from 'mobx';
 import { fabric } from 'fabric';
 import { getUid, isHtmlAudioElement, isHtmlImageElement, isHtmlVideoElement } from '@/utils';
 import anime, { get } from 'animejs';
-import { MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
+import { TemplateInfo, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
 import { FabricUitls } from '@/utils/fabric-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
@@ -11,7 +11,7 @@ export class Store {
   canvas: fabric.Canvas | null
 
   backgroundColor: string;
-
+  templateInfo: TemplateInfo
   selectedMenuOption: MenuOption;
   audios: string[]
   videos: string[]
@@ -39,6 +39,7 @@ export class Store {
     this.videos = [];
     this.images = [];
     this.audios = [];
+    this.templateInfo = {};
     this.editorElements = [];
     this.backgroundColor = '#111111';
     this.maxTime = 30 * 1000;
@@ -994,6 +995,59 @@ export class Store {
       video.remove();
     })
   }
+
+
+  async saveVideo() {
+
+    const canvas = this.canvas;
+    if (!canvas) return;
+    const userId = window.sessionStorage.getItem("userId")
+    const jsonData= {
+      templateFile: JSON.stringify(canvas.toJSON([
+        "transparentCorners",
+        "cornerColor",
+        "strokeWidth",
+        "cornerStrokeColor",
+        "borderColor",
+        "cornerStyle",
+        "name",
+        "category",
+        "level",
+        "splitByGrapheme",
+      ])),
+      Name: this.templateInfo?.Name,
+      Category: this.templateInfo?.Category,
+      isPublished:  this.templateInfo?.isPublished,
+      Platform: this.templateInfo?.Platform,
+      Type: this.templateInfo?.Type,
+      userId: userId
+    };
+    const templateId = window.sessionStorage.getItem("templateId")
+    const token = window.sessionStorage.getItem("token")
+    // Send JSON data to backend URL
+    fetch(`https://skyestudio-backend.onrender.com/creatives/designs/${templateId}/update`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `${token}`,
+      },
+      body: JSON.stringify(jsonData),
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log("Video sent successfully to backend");
+          alert("Video saved successfully!");
+        } else {
+          console.error("Failed to send video to backend");
+          alert("Error saving video.")
+        }
+      })
+      .catch(error => {
+        console.error("Error sending video to backend:", error);
+        alert("Error saving video.")
+      });
+  };
+
 
   refreshElements(currentColour?:(string | undefined)) {
     console.log("refreshing..."  +currentColour)

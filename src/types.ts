@@ -123,3 +123,12 @@ export type MenuOption =
   | "Shapes"
   | "Colour"
   | "Fill";
+
+
+  export interface TemplateInfo {
+    Name?: string;
+    Category?: string;
+    isPublished?: boolean;
+    Type?: string;
+    Platform?: string;
+  }
