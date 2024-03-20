@@ -4,12 +4,12 @@ import logo from '../../public/favicon.png'
 import { fabric } from "fabric";
 import React, { useEffect, useState } from "react";
 import { StoreContext } from "@/store";
+import { Store } from "@/store/Store";
 import { observer } from "mobx-react";
 import { Resources } from "./Resources";
 import { ElementsPanel } from "./panels/ElementsPanel";
 import { Menu } from "./Menu";
 import { TimeLine } from "./TimeLine";
-import { Store } from "@/store/Store";
 import "@/utils/fabric-utils";
 
 export const EditorWithStore = () => {
