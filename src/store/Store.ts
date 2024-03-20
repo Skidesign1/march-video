@@ -19,6 +19,10 @@ export class Store {
   editorElements: EditorElement[]
   selectedElement: EditorElement | null;
 
+  
+  portrait:boolean;
+  page:number;
+
   maxTime: number
   animations: Animation[]
   animationTimeLine: anime.AnimeTimelineInstance;
@@ -39,6 +43,8 @@ export class Store {
     this.backgroundColor = '#111111';
     this.maxTime = 30 * 1000;
     this.playing = false;
+    this.page=0;
+    this.portrait=false;
     this.currentKeyFrame = 0;
     this.selectedElement = null;
     this.fps = 60;
@@ -66,6 +72,14 @@ export class Store {
     if (canvas) {
       canvas.backgroundColor = this.backgroundColor;
     }
+  }
+
+  setPage(page:number){
+    this.page=page
+  }
+
+  setPortrait(isPortrait:boolean){
+    this.portrait=isPortrait
   }
 
 
