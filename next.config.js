@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, ) => {
+  webpack: (config ) => {
     config.externals.push({
       sharp: "commonjs sharp",
       canvas: "commonjs canvas",
