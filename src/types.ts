@@ -1,5 +1,9 @@
 import { fabric } from "fabric";
 
+
+
+
+
 export type EditorElementBase<T extends string, P> = {
   readonly id: string;
   fabricObject?: fabric.Object;
@@ -123,3 +127,13 @@ export type MenuOption =
   | "Shapes"
   | "Colour"
   | "Fill";
+
+
+
+  export interface TemplateInfo {
+    Name?: string;
+    Category?: string;
+    isPublished?: boolean;
+    Type?: string;
+    Platform?: string;
+  }

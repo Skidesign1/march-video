@@ -2,16 +2,22 @@ import { makeAutoObservable } from 'mobx';
 import { fabric } from 'fabric';
 import { getUid, isHtmlAudioElement, isHtmlImageElement, isHtmlVideoElement } from '@/utils';
 import anime, { get } from 'animejs';
-import { MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
+import { MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement, TemplateInfo } from '../types';
 import { FabricUitls } from '@/utils/fabric-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 
+
+
 export class Store {
+
+
+
   canvas: fabric.Canvas | null
 
   backgroundColor: string;
-
+  templateInfo: TemplateInfo
+  userInfo: object
   selectedMenuOption: MenuOption;
   audios: string[]
   videos: string[]
@@ -24,11 +30,17 @@ export class Store {
   animationTimeLine: anime.AnimeTimelineInstance;
   playing: boolean;
 
+  portrait:boolean;
+  page:number;
+
+
   currentKeyFrame: number;
   fps: number;
 
   possibleVideoFormats: string[] = ['mp4', 'webm'];
   selectedVideoFormat: 'mp4' | 'webm';
+
+  
 
   constructor() {
     this.canvas = null;
@@ -42,6 +54,10 @@ export class Store {
     this.currentKeyFrame = 0;
     this.selectedElement = null;
     this.fps = 60;
+    this.templateInfo = {};
+    this.userInfo = {};
+    this.page=0;
+    this.portrait=false;
     this.animations = [];
     this.animationTimeLine = anime.timeline();
     this.selectedMenuOption = 'Video';
@@ -55,6 +71,14 @@ export class Store {
 
   setCurrentTimeInMs(time: number) {
     this.currentKeyFrame = Math.floor(time / 1000 * this.fps);
+  }
+
+  setPage(page:number){
+    this.page=page
+  }
+
+  setPortrait(isPortrait:boolean){
+    this.portrait=isPortrait
   }
 
   setSelectedMenuOption(selectedMenuOption: MenuOption) {
@@ -76,6 +100,22 @@ export class Store {
         fabricObject.set('fill', color);
       }
       // this.refreshElements();
+    }
+  }
+
+
+
+  setTemplateInfo(templateInfo: object) {
+    if (templateInfo) {
+      this.templateInfo = templateInfo;
+      console.log('setting templte info')
+      console.log(templateInfo)
+    }
+  }
+
+  setUserInfo(userInfo: object) {
+    if (userInfo) {
+      this.userInfo = userInfo;
     }
   }
 
@@ -980,6 +1020,58 @@ export class Store {
       video.remove();
     })
   }
+
+  async saveVideo() {
+
+    const canvas = this.canvas;
+    if (!canvas) return;
+    const userId = window.sessionStorage.getItem("userId")
+    const jsonData= {
+      templateFile: JSON.stringify(canvas.toJSON([
+        "transparentCorners",
+        "cornerColor",
+        "strokeWidth",
+        "cornerStrokeColor",
+        "borderColor",
+        "cornerStyle",
+        "name",
+        "category",
+        "level",
+        "splitByGrapheme",
+      ])),
+      Name: this.templateInfo?.Name,
+      Category: this.templateInfo?.Category,
+      isPublished:  this.templateInfo?.isPublished,
+      Platform: this.templateInfo?.Platform,
+      Type: this.templateInfo?.Type,
+      userId: userId
+    };
+    const templateId = window.sessionStorage.getItem("templateId")
+    const token = window.sessionStorage.getItem("token")
+    // Send JSON data to backend URL
+    fetch(`https://skyestudio-backend.onrender.com/creatives/designs/${templateId}/update`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `${token}`,
+      },
+      body: JSON.stringify(jsonData),
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log("Video sent successfully to backend");
+          alert("Video saved successfully!");
+        } else {
+          console.error("Failed to send video to backend");
+          alert("Error saving video.")
+        }
+      })
+      .catch(error => {
+        console.error("Error sending video to backend:", error);
+        alert("Error saving video.")
+      });
+  };
+
 
   refreshElements(currentColour?:(string | undefined)) {
     console.log("refreshing..."  +currentColour)
