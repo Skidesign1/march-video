@@ -22,21 +22,17 @@ export const EditorWithStore = () => {
 }
 
 export const Editor = observer(() => {
-  const[portrait, setPortrait]=useState(true)
-  const[page, setPage]=useState(0)
   const store = React.useContext(StoreContext);
-  
-
-
-
+  let page = store.page
+  let portrait=store.portrait
   const portraitView = ()=>{
-    setPage(1)
-    setPortrait(true)
+    store.setPage(1)
+    store.setPortrait(true)
   }
 
   const landscapeView = ()=>{
-    setPage(1)
-    setPortrait(false)
+    store.setPage(1)
+    store.setPortrait(false)
   }
 
 
