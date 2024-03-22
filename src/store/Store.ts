@@ -1244,25 +1244,25 @@ export class Store {
           inheritedColoor:element.fabricObject?.fill
           }
          )
-          let dynamicColor:(string|fabric.Pattern|fabric.Gradient);
-          // if(element.fabricObject?.fill){
-          //   dynamicColor=element.fabricObject?.fill
+          // let dynamicColor:(string|fabric.Pattern|fabric.Gradient);
+          // // if(element.fabricObject?.fill){
+          // //   dynamicColor=element.fabricObject?.fill
+          // // }
+          // switch (true) {
+          //   case element.fabricObject?.fill !==undefined:
+          //     dynamicColor=element.fabricObject?.fill
+              
+          //     break;
+          //   case currentColour !==undefined:
+          //     dynamicColor=currentColour
+              
+          //     break;
+          //   default:
+          //     dynamicColor="#fffff"
+              
+          //     break;
           // }
-          switch (true) {
-            case element.fabricObject?.fill !==undefined:
-              dynamicColor=element.fabricObject?.fill
-              
-              break;
-            case currentColour !==undefined:
-              dynamicColor=currentColour
-              
-              break;
-            default:
-              dynamicColor="#fffff"
-              
-              break;
-          }
-          console.log("dynamicColor",dynamicColor)
+          // console.log("dynamicColor",dynamicColor)
           const textObject = new fabric.Textbox(element.properties.text, {
             name: element.id,
             left: element.placement.x,
@@ -1278,7 +1278,7 @@ export class Store {
             selectable: true,
             lockUniScaling: true,
             // fill:currentColour
-            fill: dynamicColor??"yellow",
+            fill: element.fabricObject?.fill??currentColour??'white',
           });
           element.fabricObject = textObject;
           canvas.add(textObject);
