@@ -51,10 +51,10 @@ export const ColourPanel = observer(() => {
           color={ currentColour }
           onChange={ handleChangeComplete }
           onChangeComplete={(color: any) => {
-            // console.log(color);
+            
             handleChangeComplete
             store?.changeElementFill(rgbaToHex(currentColour));
-            // store.refreshElements(rgbaToHex(currentColour))
+            
           }}
         ></SketchPicker>
       </div>

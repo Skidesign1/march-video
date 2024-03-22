@@ -17,8 +17,7 @@ const DynmicEditor = dynamic(() => import('../../../components/Editor').then(a =
 
 function EditorPage() {
 
-    console.log('running tmplt pge')
-    // const store = React.useContext(StoreContext);
+    
   
     const params = useParams()
     const searchParams = useSearchParams()
@@ -35,33 +34,7 @@ function EditorPage() {
     }
   
     useEffect(() => {
-      // const fetchTemplateInfo = async () => {
-      //   try {
-      //     if(typeof window !== 'undefined'){
-      //     const token = window.sessionStorage.getItem('token');
-  
-      //     // Check if token exists
-      //     if (!token) {
-      //       // Handle case where token is not available
-      //       console.error('Token not found in session.');
-      //       return;
-      //     }
-  
-      //     // Define request headers with Authorization header containing the token
-      //     const config = {
-      //       headers: {
-      //         Authorization: `${token}`,
-      //       },
-      //     };
-      //     // Make a POST request to fetch template info using the provided id
-      //     const response = await axios.get(`https://skyestudio-backend.onrender.com/templates/${params.templateId}`, config);
-      //     console.log(response.data)
-      //     store?.setTemplateInfo(response.data);
-      //    }
-      //   } catch (error) {
-      //     console.error('Error fetching template info:', error);
-      //   }
-      // };
+      
   
       const userId = window.sessionStorage.getItem('userId');
       const fetchUserInfo = async () => {
@@ -85,7 +58,7 @@ function EditorPage() {
           // Make a POST request to fetch user info using the provided id
           const response = await axios.get(`https://skyestudio-backend.onrender.com/user/profile`, config);
           console.log(response)
-          // store?.setUserInfo(response.data);
+          
         } catch (error) {
           console.error('Error fetching user info:', error);
         }
