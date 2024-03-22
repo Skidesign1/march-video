@@ -54,6 +54,7 @@ export type EditorElement =
 export type Placement = {
   x: number;
   y: number;
+  fill?:string;
   width: number;
   height: number;
   rotation: number;
@@ -132,3 +133,41 @@ export type MenuOption =
     Type?: string;
     Platform?: string;
   }
+
+  export interface TextProperties {
+    type?: string;
+    text: string;
+    left?: number;
+    top?: number;
+    originX?: string;
+    originY?: string;
+    width?: number;
+    height?: number;
+    scaleX?:number;
+    scaleY?:number;
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    fontFamily?: string;
+    fontSize: number;
+    fontWeight: number;
+    fontStyle?: string;
+    textDecoration?: string;
+    textAlign?: string;
+    lineHeight?: number;
+    charSpacing?: number;
+    textBackgroundColor?: string;
+    angle?: number;
+    opacity?: number;
+    shadow?: {
+      color: string;
+      blur: number;
+      offsetX: number;
+      offsetY: number;
+    };
+    visible?: boolean;
+    selectable?: boolean;
+    evented?: boolean;
+    editable?: boolean;
+  }
+  

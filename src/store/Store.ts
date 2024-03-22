@@ -2,10 +2,11 @@ import { makeAutoObservable } from 'mobx';
 import { fabric } from 'fabric';
 import { getUid, isHtmlAudioElement, isHtmlImageElement, isHtmlVideoElement } from '@/utils';
 import anime, { get } from 'animejs';
-import { TemplateInfo, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
+import { TemplateInfo, TextProperties, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
 import { FabricUitls } from '@/utils/fabric-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
+import { Gradient } from 'fabric/fabric-impl';
 
 export class Store {
   canvas: fabric.Canvas | null
@@ -19,6 +20,7 @@ export class Store {
   editorElements: EditorElement[]
   selectedElement: EditorElement | null;
 
+  fetchedTemplate:string
   
   portrait:boolean;
   page:number;
@@ -41,10 +43,11 @@ export class Store {
     this.audios = [];
     this.templateInfo = {};
     this.editorElements = [];
-    this.backgroundColor = '#111111';
+    this.backgroundColor = 'white';
     this.maxTime = 30 * 1000;
     this.playing = false;
     this.page=0;
+    this.fetchedTemplate=""
     this.portrait=false;
     this.currentKeyFrame = 0;
     this.selectedElement = null;
@@ -89,6 +92,7 @@ export class Store {
       const fabricObject = this.selectedElement.fabricObject
       if (fabricObject instanceof fabric.Object) {
         fabricObject.set('fill', color);
+        console.log("setting fill ",color)
       }
       // this.refreshElements();
     }
@@ -323,6 +327,45 @@ export class Store {
     this.selectedElement = this.editorElements.find((element) => element.id === this.selectedElement?.id) ?? null;
   }
 
+
+  setFetchedTemplate(fetchedTemplate:string){
+    if(fetchedTemplate){
+      this.fetchedTemplate=fetchedTemplate
+    }
+  }
+
+  redrawFetchedTemplate(fetchedTemplate:string){
+    if(fetchedTemplate){
+      const jsonData = JSON.parse(fetchedTemplate);
+      
+      if(this.page>0){
+        const textObjects= jsonData.objects.filter((object:any)=>{
+          return object.type==='textbox' 
+        })
+        textObjects.forEach((textObject:any)=>{
+        console.log('plus' + textObject.text+textObject.left)
+          this.addText({
+              fill:textObject.fill,
+              left:textObject.left,
+              top:textObject.top,
+              scaleX:textObject.scaleX,
+              scaleY:textObject.scaleY,
+              angle:textObject.angle,
+              height:textObject.height,
+              width:textObject.width,
+              text: textObject.text,
+              fontSize: textObject.fontSize,
+              fontWeight: textObject.fontWeight,
+
+            })
+            // this.refreshElements(textObject.fill)
+        })
+        console.log(jsonData.objects)
+        console.log(textObjects)
+      }
+  }
+}
+
   setEditorElements(editorElements: EditorElement[]) {
     this.editorElements = editorElements;
     this.updateSelectedElement();
@@ -369,8 +412,8 @@ export class Store {
     this.setEditorElements([...this.editorElements, editorElement]);
     
     if(editorElement.type==='text'||"shape"){
-      this.refreshElements("white");
-      // console.log(editorElement)
+      this.refreshElements(editorElement.placement.fill??"white");
+      console.log("editor element colour is ", editorElement.placement.fill)
     }
     else{
       this.refreshElements()
@@ -552,11 +595,8 @@ export class Store {
     );
 
   }
-  addText(options: {
-    text: string,
-    fontSize: number,
-    fontWeight: number,
-  }) {
+  addText(options: TextProperties) {
+    
     const id = getUid();
     const index = this.editorElements.length;
     this.addEditorElement(
@@ -565,13 +605,14 @@ export class Store {
         name: `Text ${index + 1}`,
         type: "text",
         placement: {
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
+          x: options.left??0,
+          y: options.top??0,
+          width: options.width??100,
+          height: options.height??100,
+          rotation: options.angle?? 0,
+          fill:options.fill??"#fffff",
+          scaleX:options.scaleX??1,
+          scaleY:options.scaleY??1,
         },
         timeFrame: {
           start: 0,
@@ -923,7 +964,7 @@ export class Store {
   }
 
   saveCanvasToVideoWithAudioWebmMp4() {
-    console.log('modified')
+    
     let mp4 = this.selectedVideoFormat === 'mp4'
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const stream = canvas.captureStream(30);
@@ -952,7 +993,7 @@ export class Store {
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = function (e) {
         chunks.push(e.data);
-        console.log("data available");
+        
 
       };
       mediaRecorder.onstop = async function (e) {
@@ -1050,7 +1091,7 @@ export class Store {
 
 
   refreshElements(currentColour?:(string | undefined)) {
-    console.log("refreshing..."  +currentColour)
+    
     
     const store = this;
     if (!store.canvas) return;
@@ -1196,9 +1237,32 @@ export class Store {
           break;
         }
         case "text": {
-          // console.log("refreshing text...."+element)
-          // console.log(element.fabricObject?.fill)
-
+          
+          console.log(
+          {event:"refreshing text"+","+element.properties.text+","+element.name,
+          currentColour,
+          inheritedColoor:element.fabricObject?.fill
+          }
+         )
+          let dynamicColor:(string|fabric.Pattern|fabric.Gradient);
+          // if(element.fabricObject?.fill){
+          //   dynamicColor=element.fabricObject?.fill
+          // }
+          switch (true) {
+            case element.fabricObject?.fill !==undefined:
+              dynamicColor=element.fabricObject?.fill
+              
+              break;
+            case currentColour !==undefined:
+              dynamicColor=currentColour
+              
+              break;
+            default:
+              dynamicColor="#fffff"
+              
+              break;
+          }
+          console.log("dynamicColor",dynamicColor)
           const textObject = new fabric.Textbox(element.properties.text, {
             name: element.id,
             left: element.placement.x,
@@ -1214,10 +1278,10 @@ export class Store {
             selectable: true,
             lockUniScaling: true,
             // fill:currentColour
-            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
+            fill: dynamicColor??"yellow",
           });
           element.fabricObject = textObject;
-          canvas.add( textObject);
+          canvas.add(textObject);
           // console.log("text-object",textObject)
           canvas.on("object:modified", function (e) {
             if (!e.target) return;
