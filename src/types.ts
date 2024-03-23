@@ -33,14 +33,15 @@ export type TextEditorElement = EditorElementBase<
 >;
 
 export type ShapeEditorElement = EditorElementBase<
-  "rect" | 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
+  "rect"  |"polygon" | 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
   { 
     fill: string;
     width: number;
     height: number;
-    radius: number;
+    radius?: number;
     strokeWidth: number;
     stroke: string;
+    points?:any
    }
 >;
 
@@ -171,3 +172,28 @@ export type MenuOption =
     editable?: boolean;
   }
   
+
+  export interface SharedShapeProperties{
+      left?: number;
+      top?: number;
+      fill?: string;
+      stroke?: string;
+      strokeWidth?: number,
+      width?:number,
+      height?:number,
+      scaleX?:number,
+      scaleY?:number,
+      angle?:number,
+  }
+
+
+  export interface RedrawnShapeProperties extends SharedShapeProperties{
+    angle?:number;
+    backgroundColor?:string;
+    rx?:number;
+    ry?:number
+    scaleX?:number
+    scaleY?:number
+    type?:string
+    points?:any
+  }
