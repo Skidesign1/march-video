@@ -2,11 +2,11 @@ import { makeAutoObservable } from 'mobx';
 import { fabric } from 'fabric';
 import { getUid, isHtmlAudioElement, isHtmlImageElement, isHtmlVideoElement } from '@/utils';
 import anime, { get } from 'animejs';
-import { TemplateInfo, TextProperties, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
+import { RedrawnShapeProperties, TemplateInfo, SharedShapeProperties, TextProperties, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
 import { FabricUitls } from '@/utils/fabric-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
-import { Gradient } from 'fabric/fabric-impl';
+import { Gradient, Triangle } from 'fabric/fabric-impl';
 
 export class Store {
   canvas: fabric.Canvas | null
@@ -19,6 +19,9 @@ export class Store {
   images: string[]
   editorElements: EditorElement[]
   selectedElement: EditorElement | null;
+  redrawnShapePoints:any;
+
+  redrawnShapeProperties:RedrawnShapeProperties;
 
   fetchedTemplate:string
   
@@ -48,6 +51,8 @@ export class Store {
     this.playing = false;
     this.page=0;
     this.fetchedTemplate=""
+    this.redrawnShapePoints=[]
+    this.redrawnShapeProperties={};
     this.portrait=false;
     this.currentKeyFrame = 0;
     this.selectedElement = null;
@@ -342,8 +347,13 @@ export class Store {
         const textObjects= jsonData.objects.filter((object:any)=>{
           return object.type==='textbox' 
         })
-        textObjects.forEach((textObject:any)=>{
-        console.log('plus' + textObject.text+textObject.left)
+        const likelyShapes=["line","triangle", "rect" , 'circle' ,'polygon']
+        
+        const rectObjects= jsonData.objects.filter((object:any)=>{
+          return likelyShapes.includes(object.type)
+        })
+        
+        textObjects?.forEach((textObject:any)=>{
           this.addText({
               fill:textObject.fill,
               left:textObject.left,
@@ -360,8 +370,29 @@ export class Store {
             })
             // this.refreshElements(textObject.fill)
         })
+        rectObjects?.forEach(({type,width,height,fill,stroke,strokeWidth,radius,scaleX,scaleY,angle,top,left,points}:any)=>{
+          this.addShape({
+            type,
+            width,
+            height,
+            fill,
+            stroke,
+            strokeWidth,
+            radius,
+            scaleX,
+            scaleY,
+            angle,
+            top,
+            points,
+            left
+          })
+        })
+        
+
+
+        console.log(rectObjects)
         console.log(jsonData.objects)
-        console.log(textObjects)
+        // console.log(textObjects)
       }
   }
 }
@@ -411,7 +442,7 @@ export class Store {
   addEditorElement(editorElement: EditorElement) {
     this.setEditorElements([...this.editorElements, editorElement]);
     
-    if(editorElement.type==='text'||"shape"){
+    if(editorElement.type==='text'||"rect"){
       this.refreshElements(editorElement.placement.fill??"white");
       console.log("editor element colour is ", editorElement.placement.fill)
     }
@@ -630,63 +661,68 @@ export class Store {
 
 
   addShape(options: {
-    type: 'rect' | 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
+    type: 'rect' |"polygon"| 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
     width: number,
     height: number,
     fill: string,
     stroke: string,
     strokeWidth: number,
-    radius: number,
+    radius?:number,
+    angle?:number,
+    scaleX?:number,
+    scaleY?:number,
+    top?:number,
+    left?:number,
+    points?:[]
   }) {
     const id = getUid();
     const index = this.editorElements.length;
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
+    const canvas = document.getElementById("credrawnShapeColornvas") as HTMLCanvasElement;
+    
+    
+    // this.redrawnShapeColor=options.fill
+    this.redrawnShapeProperties.fill=options.fill
+    this.redrawnShapeProperties.scaleX=options.scaleX
+    this.redrawnShapeProperties.scaleY=options.scaleY
+    this.redrawnShapeProperties.angle=options.angle
+    this.redrawnShapeProperties.points=options.points
+    this.redrawnShapePoints=options.points
+    console.log("options.points")
+    console.log(options.points)
     let shape;
-
+    const commonShapeProperties:SharedShapeProperties={
+      left: 0,
+      top: 0,
+      fill: options.fill,
+      scaleX:options.scaleX,
+      scaleY:options.scaleY,
+      angle:options.angle,
+      stroke: options.stroke,
+      strokeWidth: options.strokeWidth,
+      width: options.width,
+      height: options.height,
+    }
     switch (options.type) {
       case 'rect':
-        shape = new fabric.Rect({
-          left: 0,
-          top: 0,
-          width: options.width,
-          height: options.height,
-          fill: options.fill,
-          stroke: options.stroke,
-          strokeWidth: options.strokeWidth,
-        });
+        shape = new fabric.Rect(
+          commonShapeProperties
+        );
         break;
       case 'circle':
         shape = new fabric.Circle({
-          left: 0,
-          top: 0,
+          ...commonShapeProperties,
           radius: options.radius,
-          fill: options.fill,
-          stroke: options.stroke,
-          strokeWidth: options.strokeWidth,
         });
         break;
       case 'triangle':
-        shape = new fabric.Triangle({
-          left: 0,
-          top: 0,
-          width: options.width,
-          height: options.height,
-          fill: options.fill,
-          stroke: options.stroke,
-          strokeWidth: options.strokeWidth,
-        });
+        shape = new fabric.Triangle(
+          commonShapeProperties,
+        );
         break;
       case 'line':
-        shape = new fabric.Line([50, 50, 250, 50], {
-          left: 0,
-          top: 0,
-          width: options.width,
-          height: options.height,
-          fill: options.fill,
-          stroke: options.stroke,
-          strokeWidth: options.strokeWidth,
-        });
+        shape = new fabric.Line([50, 50, 250, 50],
+          commonShapeProperties,
+        );
         break;
       case 'octagon':
         shape = new fabric.Polygon(
@@ -700,15 +736,8 @@ export class Store {
             { x: -50, y: 0 },
             { x: -35.4, y: -35.4 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+            commonShapeProperties,
+           );
         break;
       case 'pentagon':
         shape = new fabric.Polygon(
@@ -719,15 +748,8 @@ export class Store {
             { x: -30, y: 40 },
             { x: -50, y: -20 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties
+          );
         break;
       case 'hexagon':
         shape = new fabric.Polygon(
@@ -739,16 +761,22 @@ export class Store {
             { x: -43.3, y: 25 },
             { x: -43.3, y: -25 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties
+          );
         break;
+      // case 'polygon':
+      //   shape = new fabric.Polygon(
+      //     [
+      //       { x: 0, y: -50 },
+      //       { x: 43.3, y: -25 },
+      //       { x: 43.3, y: 25 },
+      //       { x: 0, y: 50 },
+      //       { x: -43.3, y: 25 },
+      //       { x: -43.3, y: -25 }
+      //     ],
+      //     commonShapeProperties
+      //     );
+      //   break;
       case 'rhombus':
         shape = new fabric.Polygon(
           [
@@ -757,15 +785,8 @@ export class Store {
             { x: 0, y: 50 },
             { x: -50, y: 0 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties
+            );
         break;
       case 'trapezoid':
         shape = new fabric.Polygon(
@@ -775,15 +796,7 @@ export class Store {
             { x: 30, y: 50 },
             { x: -30, y: 50 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties);
         break;
       case 'parallelogram':
         shape = new fabric.Polygon(
@@ -793,67 +806,37 @@ export class Store {
             { x: 50, y: 50 },
             { x: -30, y: 50 }
           ],
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties);
+        break;
+      case 'polygon':
+        shape = new fabric.Polygon(
+          this.redrawnShapeProperties.points,
+          commonShapeProperties);
         break;
       case 'ellipse':
         shape = new fabric.Ellipse(
           {
+            ...commonShapeProperties,
             rx: 50,
             ry: 25,
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
           });
         break;
       case 'oval':
         shape = new fabric.Ellipse(
           {
+            ...commonShapeProperties,
             rx: 75,
             ry: 40,
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
           });
         break;
       case 'star':
         shape = new fabric.Path('M 100 0 L 125 50 L 200 50 L 150 90 L 175 150 L 100 120 L 25 150 L 50 90 L 0 50 L 75 50 Z',
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties,
+          );
         break;
       case 'heart':
         shape = new fabric.Path('M 100 0 A 20 20 0 0 1 100 40 A 20 20 0 0 1 100 80 Q 100 100 80 120 A 20 20 0 0 1 60 120 A 20 20 0 0 1 20 80 Q 0 60 0 40 A 20 20 0 0 1 20 0 Q 50 -20 100 0 Z',
-          {
-            left: 0,
-            top: 0,
-            width: options.width,
-            height: options.height,
-            fill: options.fill,
-            stroke: options.stroke,
-            strokeWidth: options.strokeWidth,
-          });
+          commonShapeProperties);
         break;
 
       default:
@@ -866,13 +849,13 @@ export class Store {
         name: `${options.type.charAt(0).toUpperCase() + options.type.slice(1)} ${index + 1}`,
         type: options.type,
         placement: {
-          x: 50,
-          y: 50,
+          x: options.left??50,
+          y: options.top??50,
           width: options.width,
           height: options.height,
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
+          rotation: options.angle??0,
+          scaleX: options.scaleX??1,
+          scaleY: options.scaleY??1,
         },
         timeFrame: {
           start: 0,
@@ -885,6 +868,7 @@ export class Store {
           radius: options.radius,
           strokeWidth: options.strokeWidth,
           stroke: options.stroke,
+          points:options.points
         },
       },
     );
@@ -1089,6 +1073,37 @@ export class Store {
       });
   };
 
+  // createFabricShape(element, options) {
+  //   const fabricObject = new options.fabricClass({
+  //     name: element.id,
+  //     left: element.placement.x,
+  //     top: element.placement.y,
+  //     scaleX: element.placement.scaleX,
+  //     scaleY: element.placement.scaleY,
+  //     angle: element.placement.rotation,
+  //     ...options.additionalProps,
+  //   });
+  //   element.fabricObject = fabricObject;
+  //   canvas.add(fabricObject);
+  //   canvas.on("object:modified", function (e) {
+  //     if (!e.target) return;
+  //     const target = e.target;
+  //     if (target !== fabricObject) return;
+  //     const placement = element.placement;
+  //     const newPlacement = {
+  //       ...placement,
+  //       x: target.left ?? placement.x,
+  //       y: target.top ?? placement.y,
+  //       rotation: target.angle ?? placement.rotation,
+  //     };
+  //     const newElement = {
+  //       ...element,
+  //       placement: newPlacement,
+  //     };
+  //     store?.updateEditorElement(newElement);
+  //   });
+  // }
+  
 
   refreshElements(currentColour?:(string | undefined)) {
     
@@ -1099,6 +1114,21 @@ export class Store {
     store.canvas.remove(...store.canvas.getObjects());
     for (let index = 0; index < store.editorElements.length; index++) {
       const element = store.editorElements[index];
+      // console.log("points is")
+      
+      // console.log(this.redrawnShapeProperties.points)
+      const commonShapePropertiesForRefresh={
+        name: element.id,
+        left: element.placement.x,
+        top: element.placement.y,
+        scaleX: element.placement.scaleX,
+        scaleY: element.placement.scaleY,
+        angle: element.placement.rotation??this.redrawnShapeProperties.angle,
+        fill: element.fabricObject?.fill??this.redrawnShapeProperties.fill??"grey",
+        objectCaching: false,
+        selectable: true,
+        lockUniScaling: true,
+      }
       switch (element.type) {
         case "video": {
           console.log("elementid", element.properties.elementId);
@@ -1238,31 +1268,12 @@ export class Store {
         }
         case "text": {
           
-          console.log(
-          {event:"refreshing text"+","+element.properties.text+","+element.name,
-          currentColour,
-          inheritedColoor:element.fabricObject?.fill
-          }
-         )
-          // let dynamicColor:(string|fabric.Pattern|fabric.Gradient);
-          // // if(element.fabricObject?.fill){
-          // //   dynamicColor=element.fabricObject?.fill
-          // // }
-          // switch (true) {
-          //   case element.fabricObject?.fill !==undefined:
-          //     dynamicColor=element.fabricObject?.fill
-              
-          //     break;
-          //   case currentColour !==undefined:
-          //     dynamicColor=currentColour
-              
-          //     break;
-          //   default:
-          //     dynamicColor="#fffff"
-              
-          //     break;
-          // }
-          // console.log("dynamicColor",dynamicColor)
+        //   console.log(
+        //   {event:"refreshing text"+","+element.properties.text+","+element.name,
+        //   currentColour,
+        //   inheritedColoor:element.fabricObject?.fill
+        //   }
+        //  )
           const textObject = new fabric.Textbox(element.properties.text, {
             name: element.id,
             left: element.placement.x,
@@ -1277,7 +1288,6 @@ export class Store {
             objectCaching: false,
             selectable: true,
             lockUniScaling: true,
-            // fill:currentColour
             fill: element.fabricObject?.fill??currentColour??'white',
           });
           element.fabricObject = textObject;
@@ -1312,19 +1322,18 @@ export class Store {
           break; 
         }
         case "rect": {
+          
+          // console.log(
+          //   {event:"refreshing shpe"+","+element.name,
+          //   currentColour,
+          //   inheritedColoor:element.fabricObject?.fill
+          //   }
+          //  )
+          
           const rectObject = new fabric.Rect({
-            name: element.id,
-            left: element.placement.x,
-            top: element.placement.y,
-            scaleX: element.placement.scaleX,
-            scaleY: element.placement.scaleY,
+            ...commonShapePropertiesForRefresh,
             width: element.properties.width,
             height: element.properties.height,
-            angle: element.placement.rotation,
-            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-            objectCaching: false,
-            selectable: true,
-            lockUniScaling: true,
           });
           element.fabricObject = rectObject;
           canvas.add(rectObject);
@@ -1353,18 +1362,9 @@ export class Store {
         }
         case "circle": {
           const circleObject = new fabric.Circle({
-            name: element.id,
-            left: element.placement.x,
-            top: element.placement.y,
-            scaleX: element.placement.scaleX,
-            scaleY: element.placement.scaleY,
-            angle: element.placement.rotation,
-            radius: element.properties.radius,
-            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-            objectCaching: false,
-            selectable: true,
-            lockUniScaling: true,
-          });
+            ...commonShapePropertiesForRefresh,
+            radius:element.properties.radius,
+        });
           element.fabricObject = circleObject;
           canvas.add(circleObject);
           canvas.on("object:modified", function (e) {
@@ -1392,18 +1392,9 @@ export class Store {
         }
         case "triangle": {
           const triangleObject = new fabric.Triangle({
-            name: element.id,
-            left: element.placement.x,
-            top: element.placement.y,
-            scaleX: element.placement.scaleX,
-            scaleY: element.placement.scaleY,
+            ...commonShapePropertiesForRefresh,
             width: element.properties.width,
             height: element.properties.height,
-            angle: element.placement.rotation,
-            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-            objectCaching: false,
-            selectable: true,
-            lockUniScaling: true,
           });
           element.fabricObject = triangleObject;
           canvas.add(triangleObject);
@@ -1432,20 +1423,9 @@ export class Store {
         }
         case "line": {
           const lineObject = new fabric.Line([50, 50, 250, 50], {
-            name: element.id,
-            left: element.placement.x,
-            top: element.placement.y,
-            scaleX: element.placement.scaleX,
-            scaleY: element.placement.scaleY,
+            ...commonShapePropertiesForRefresh,
             width: element.properties.width,
             height: element.properties.height,
-            angle: element.placement.rotation,
-            fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-            stroke: element.properties.stroke,
-            strokeWidth: element.properties.strokeWidth,
-            objectCaching: false,
-            selectable: true,
-            lockUniScaling: true,
           });
           element.fabricObject = lineObject;
           canvas.add(lineObject);
@@ -1485,20 +1465,9 @@ export class Store {
               { x: -35.4, y: -35.4 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = octObject;
           canvas.add(octObject);
@@ -1535,20 +1504,9 @@ export class Store {
               { x: -50, y: -20 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = pentObject;
           canvas.add(pentObject);
@@ -1586,20 +1544,9 @@ export class Store {
               { x: -43.3, y: -25 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = hexObject;
           canvas.add(hexObject);
@@ -1635,20 +1582,9 @@ export class Store {
               { x: -50, y: 0 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = rhoObject;
           canvas.add(rhoObject);
@@ -1684,20 +1620,9 @@ export class Store {
               { x: -30, y: 50 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = traObject;
           canvas.add(traObject);
@@ -1733,20 +1658,9 @@ export class Store {
               { x: -30, y: 50 }
             ],
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = paraObject;
           canvas.add(paraObject);
@@ -1773,25 +1687,61 @@ export class Store {
           });
           break;
         }
+        case "polygon": {
+          // console.log(element)
+          console.log("this.redrawnShapeProperties.points first member")
+          console.log(JSON.parse(JSON.stringify(element.properties.points)))
+          
+          const redrawnPolygonObject = new fabric.Polygon(
+            JSON.parse(JSON.stringify(element.properties.points)),
+            // [
+            //   { x: 0, y: -50 },
+            //   { x: 35.4, y: -35.4 },
+            //   { x: 50, y: 0 },
+            //   { x: 35.4, y: 35.4 },
+            //   { x: 0, y: 50 },
+            //   { x: -35.4, y: 35.4 },
+            //   { x: -50, y: 0 },
+            //   { x: -35.4, y: -35.4 }
+            // ],
+            {
+              ...commonShapePropertiesForRefresh,
+              width: element.properties.width,
+              height: element.properties.height,
+            });
+          element.fabricObject = redrawnPolygonObject;
+          canvas.add(redrawnPolygonObject);
+          canvas.on("object:modified", function (e) {
+            if (!e.target) return;
+            const target = e.target;
+            if (target != redrawnPolygonObject) return;
+            const placement = element.placement;
+            const newPlacement: Placement = {
+              ...placement,
+              x: target.left ?? placement.x,
+              y: target.top ?? placement.y,
+              rotation: target.angle ?? placement.rotation,
+              width: target.width ?? placement.width,
+              height: target.height ?? placement.height,
+              scaleX: target.scaleX ?? placement.scaleX,
+              scaleY: target.scaleY ?? placement.scaleY,
+            };
+            const newElement = {
+              ...element,
+              placement: newPlacement,
+            };
+            store?.updateEditorElement(newElement);
+          });
+          break;
+        }
         case "ellipse": {
           const elipObject = new fabric.Ellipse(
             {
-              name: element.id,
+              ...commonShapePropertiesForRefresh,
               rx: 50,
               ry: 25,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = elipObject;
           canvas.add(elipObject);
@@ -1821,22 +1771,11 @@ export class Store {
         case "oval": {
           const ovaObject = new fabric.Ellipse(
             {
-              name: element.id,
-              rx: 75,
-              ry: 40,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
+              rx: 75,
+              ry: 40,
             });
           element.fabricObject = ovaObject;
           canvas.add(ovaObject);
@@ -1866,20 +1805,9 @@ export class Store {
         case "star": {
           const starObject = new fabric.Path('M 100 0 L 125 50 L 200 50 L 150 90 L 175 150 L 100 120 L 25 150 L 50 90 L 0 50 L 75 50 Z',
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = starObject;
           canvas.add(starObject);
@@ -1909,20 +1837,9 @@ export class Store {
         case "heart": {
           const heartObject = new fabric.Path('M 100 0 A 20 20 0 0 1 100 40 A 20 20 0 0 1 100 80 Q 100 100 80 120 A 20 20 0 0 1 60 120 A 20 20 0 0 1 20 80 Q 0 60 0 40 A 20 20 0 0 1 20 0 Q 50 -20 100 0 Z',
             {
-              name: element.id,
-              left: element.placement.x,
-              top: element.placement.y,
-              scaleX: element.placement.scaleX,
-              scaleY: element.placement.scaleY,
+              ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
-              angle: element.placement.rotation,
-              fill: element.fabricObject?.fill?element.fabricObject?.fill:"white",
-              stroke: element.properties.stroke,
-              strokeWidth: element.properties.strokeWidth,
-              objectCaching: false,
-              selectable: true,
-              lockUniScaling: true,
             });
           element.fabricObject = heartObject;
           canvas.add(heartObject);
