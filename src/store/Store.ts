@@ -353,6 +353,9 @@ export class Store {
         const textObjects= jsonData.objects.filter((object:any)=>{
           return object.type==='textbox' 
         })
+        const imageObjects= jsonData.objects.filter((object:any)=>{
+          return object.type==='coverImage' 
+        })
         const likelyShapes=["line","triangle", "rect" , 'circle' ,'polygon']
         
         const rectObjects= jsonData.objects.filter((object:any)=>{
@@ -393,12 +396,43 @@ export class Store {
             left
           })
         })
+        let index=0
+        imageObjects.forEach((imageObject:any)=>{
+          const id = getUid();
+          this.addEditorElement(
+
+            {
+              id,
+              name: `Media(image) ${index + 1}`,
+              type: "image",
+              placement: {
+                x: imageObject.left,
+                y: imageObject.top,
+                width: imageObject.width,
+                height: imageObject.height,
+                rotation: imageObject.angle,
+                scaleX: imageObject.scaleX,
+                scaleY: imageObject.scaleY,
+              },
+              timeFrame: {
+                start: 0,
+                end: this.maxTime,
+              },
+              properties: {
+                elementId: `image-${id}`,
+                src: imageObject.src,
+                effect: {
+                  type: "none",
+                }
+              },
+            },
+          );
+          
+        })
         
-
-
-        console.log(rectObjects)
         console.log(jsonData.objects)
-        // console.log(textObjects)
+        console.log(imageObjects)
+        
       }
   }
 }
@@ -1264,6 +1298,7 @@ export class Store {
           // if (element.properties.effect?.type === "blackAndWhite") {
           //   filters.push(new fabric.Image.filters.Grayscale());
           // }
+          
           const imageObject = new fabric.CoverImage(imageElement, {
             name: element.id,
             left: element.placement.x,

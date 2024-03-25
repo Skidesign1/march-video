@@ -76,15 +76,15 @@ export const Editor = observer(() => {
     store.setPortrait(false)
   }
 
-  useEffect(() => {
-    // Load canvas from fetched template only when it's available
-    if (fetchedTemplate) {
-      // store.setPage(1)
-      store?.canvas?.loadFromJSON(fetchedTemplate, function() {
-        store?.canvas?.renderAll();
-      });
-    }
-  }, [fetchedTemplate]);
+  // useEffect(() => {
+  //   // Load canvas from fetched template only when it's available
+  //   if (fetchedTemplate) {
+  //     // store.setPage(1)
+  //     store?.canvas?.loadFromJSON(fetchedTemplate, function() {
+  //       store?.canvas?.renderAll();
+  //     });
+  //   }
+  // }, [fetchedTemplate]);
 
   
 
