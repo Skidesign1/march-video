@@ -197,3 +197,20 @@ export type MenuOption =
     type?:string
     points?:any
   }
+
+  
+  interface Dimension {
+    x: number;
+    y: number;
+  }
+  
+  interface Polygon {
+    name: string;
+    dimensions: Dimension[];
+  }
+  
+  
+
+  export interface PolygonPointsList {
+    polygonPoints: Polygon[][];
+  }
