@@ -2,11 +2,12 @@ import { makeAutoObservable } from 'mobx';
 import { fabric } from 'fabric';
 import { getUid, isHtmlAudioElement, isHtmlImageElement, isHtmlVideoElement } from '@/utils';
 import anime, { get } from 'animejs';
-import { RedrawnShapeProperties, TemplateInfo, SharedShapeProperties, TextProperties, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
+import { PolygonPointsList, RedrawnShapeProperties, TemplateInfo, SharedShapeProperties, TextProperties, MenuOption, EditorElement, Animation, TimeFrame, VideoEditorElement, AudioEditorElement, Placement, ImageEditorElement, Effect, TextEditorElement } from '../types';
 import { FabricUitls } from '@/utils/fabric-utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
-import { Gradient, Triangle } from 'fabric/fabric-impl';
+import { Gradient, Polygon, Triangle } from 'fabric/fabric-impl';
+import { Factory } from 'react';
 
 export class Store {
   canvas: fabric.Canvas | null
@@ -23,8 +24,11 @@ export class Store {
 
   redrawnShapeProperties:RedrawnShapeProperties;
 
-  fetchedTemplate:string
+  fetchedTemplate:string;
   
+
+  polygonData:PolygonPointsList;
+
   portrait:boolean;
   page:number;
 
@@ -56,6 +60,8 @@ export class Store {
     this.portrait=false;
     this.currentKeyFrame = 0;
     this.selectedElement = null;
+
+    this.polygonData={polygonPoints:[]}
     this.fps = 60;
     this.animations = [];
     this.animationTimeLine = anime.timeline();
@@ -660,6 +666,15 @@ export class Store {
   }
 
 
+  extractPolygonPoints(name:string){
+    const filtered=JSON.parse(JSON.stringify(this.polygonData)).polygonPoints[0].filter((polygon:any)=>{
+      return polygon.name===name
+    })
+    return filtered[0].dimensions
+  }
+
+
+
   addShape(options: {
     type: 'rect' |"polygon"| 'circle' | 'triangle' | 'line' | 'octagon' | 'pentagon' | 'hexagon' | 'rhombus' | 'trapezoid' | 'parallelogram' | 'ellipse' | 'oval' | 'star' | 'heart',
     width: number,
@@ -675,6 +690,72 @@ export class Store {
     left?:number,
     points?:[]
   }) {
+
+    this.polygonData = {
+      polygonPoints:[
+        [
+          {
+          name:"pentagon",
+          dimensions:[
+          { x: 0, y: -50 },
+          { x: 50, y: -20 },
+          { x: 30, y: 40 },
+          { x: -30, y: 40 },
+          { x: -50, y: -20 }
+          ]
+        },
+          {
+          name:"hexagon",
+          dimensions:[
+            { x: 0, y: -50 },
+            { x: 43.3, y: -25 },
+            { x: 43.3, y: 25 },
+            { x: 0, y: 50 },
+            { x: -43.3, y: 25 },
+            { x: -43.3, y: -25 }
+          ]
+        },
+          {
+          name:"parallelogram",
+          dimensions:[
+            { x: 0, y: -50 },
+            { x: 80, y: -50 },
+            { x: 50, y: 50 },
+            { x: -30, y: 50 }
+          ]
+        },
+          {
+          name:"octagon",
+          dimensions:[
+            { x: 0, y: -50 },
+            { x: 35.4, y: -35.4 },
+            { x: 50, y: 0 },
+            { x: 35.4, y: 35.4 },
+            { x: 0, y: 50 },
+            { x: -35.4, y: 35.4 },
+            { x: -50, y: 0 },
+            { x: -35.4, y: -35.4 }
+          ]
+        },
+          {
+          name:"trapezoid",
+          dimensions:[
+            { x: -40, y: -50 },
+            { x: 40, y: -50 },
+            { x: 30, y: 50 },
+            { x: -30, y: 50 }
+          ]
+        },
+          {
+          name:"rhombus",
+          dimensions:[            
+              { x: 0, y: -50 },
+              { x: 50, y: 0 },
+              { x: 0, y: 50 },
+              { x: -50, y: 0 }
+          ]
+        },
+      ]]}
     const id = getUid();
     const index = this.editorElements.length;
     const canvas = document.getElementById("credrawnShapeColornvas") as HTMLCanvasElement;
@@ -687,8 +768,11 @@ export class Store {
     this.redrawnShapeProperties.angle=options.angle
     this.redrawnShapeProperties.points=options.points
     this.redrawnShapePoints=options.points
-    console.log("options.points")
-    console.log(options.points)
+    // console.log("options.points")
+    // console.log(options.points)
+    console.log(this.extractPolygonPoints('pentagon'))
+    console.log(JSON.parse(JSON.stringify(this.polygonData)))
+
     let shape;
     const commonShapeProperties:SharedShapeProperties={
       left: 0,
@@ -726,86 +810,36 @@ export class Store {
         break;
       case 'octagon':
         shape = new fabric.Polygon(
-          [
-            { x: 0, y: -50 },
-            { x: 35.4, y: -35.4 },
-            { x: 50, y: 0 },
-            { x: 35.4, y: 35.4 },
-            { x: 0, y: 50 },
-            { x: -35.4, y: 35.4 },
-            { x: -50, y: 0 },
-            { x: -35.4, y: -35.4 }
-          ],
+          this.extractPolygonPoints('octagon'),
             commonShapeProperties,
            );
         break;
       case 'pentagon':
         shape = new fabric.Polygon(
-          [
-            { x: 0, y: -50 },
-            { x: 50, y: -20 },
-            { x: 30, y: 40 },
-            { x: -30, y: 40 },
-            { x: -50, y: -20 }
-          ],
+          this.extractPolygonPoints('pentagon'),
           commonShapeProperties
           );
         break;
       case 'hexagon':
         shape = new fabric.Polygon(
-          [
-            { x: 0, y: -50 },
-            { x: 43.3, y: -25 },
-            { x: 43.3, y: 25 },
-            { x: 0, y: 50 },
-            { x: -43.3, y: 25 },
-            { x: -43.3, y: -25 }
-          ],
+          this.extractPolygonPoints('hexagon'),
           commonShapeProperties
           );
         break;
-      // case 'polygon':
-      //   shape = new fabric.Polygon(
-      //     [
-      //       { x: 0, y: -50 },
-      //       { x: 43.3, y: -25 },
-      //       { x: 43.3, y: 25 },
-      //       { x: 0, y: 50 },
-      //       { x: -43.3, y: 25 },
-      //       { x: -43.3, y: -25 }
-      //     ],
-      //     commonShapeProperties
-      //     );
-      //   break;
       case 'rhombus':
         shape = new fabric.Polygon(
-          [
-            { x: 0, y: -50 },
-            { x: 50, y: 0 },
-            { x: 0, y: 50 },
-            { x: -50, y: 0 }
-          ],
+          this.extractPolygonPoints('rhombus'),
           commonShapeProperties
             );
         break;
       case 'trapezoid':
         shape = new fabric.Polygon(
-          [
-            { x: -40, y: -50 },
-            { x: 40, y: -50 },
-            { x: 30, y: 50 },
-            { x: -30, y: 50 }
-          ],
+          this.extractPolygonPoints('trapezoid'),
           commonShapeProperties);
         break;
       case 'parallelogram':
         shape = new fabric.Polygon(
-          [
-            { x: 0, y: -50 },
-            { x: 80, y: -50 },
-            { x: 50, y: 50 },
-            { x: -30, y: 50 }
-          ],
+          this.extractPolygonPoints('parallelogram'),
           commonShapeProperties);
         break;
       case 'polygon':
@@ -849,8 +883,8 @@ export class Store {
         name: `${options.type.charAt(0).toUpperCase() + options.type.slice(1)} ${index + 1}`,
         type: options.type,
         placement: {
-          x: options.left??50,
-          y: options.top??50,
+          x: options.left??0,
+          y: options.top??0,
           width: options.width,
           height: options.height,
           rotation: options.angle??0,
@@ -1104,10 +1138,35 @@ export class Store {
   //   });
   // }
   
+  refreshShape(e:any,element:EditorElement,object:fabric.Object){
+    
+      if (!e.target) return;
+      const target = e.target;
+      if (target != object) return;
+      const placement = element.placement;
+      const newPlacement: Placement = {
+        ...placement,
+        x: target.left ?? placement.x,
+        y: target.top ?? placement.y,
+        rotation: target.angle ?? placement.rotation,
+        width: target.width ?? placement.width,
+        height: target.height ?? placement.height,
+        scaleX: target.scaleX ?? placement.scaleX,
+        scaleY: target.scaleY ?? placement.scaleY,
+      };
+      const newElement = {
+        ...element,
+        placement: newPlacement,
+      };
+      this.updateEditorElement(newElement);
+    
+  }
+
 
   refreshElements(currentColour?:(string | undefined)) {
     
     
+
     const store = this;
     if (!store.canvas) return;
     const canvas = store.canvas;
@@ -1323,13 +1382,6 @@ export class Store {
         }
         case "rect": {
           
-          // console.log(
-          //   {event:"refreshing shpe"+","+element.name,
-          //   currentColour,
-          //   inheritedColoor:element.fabricObject?.fill
-          //   }
-          //  )
-          
           const rectObject = new fabric.Rect({
             ...commonShapePropertiesForRefresh,
             width: element.properties.width,
@@ -1338,25 +1390,7 @@ export class Store {
           element.fabricObject = rectObject;
           canvas.add(rectObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != rectObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
+            store.refreshShape(e,element,rectObject)
           });
           break;
         }
@@ -1368,26 +1402,8 @@ export class Store {
           element.fabricObject = circleObject;
           canvas.add(circleObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != circleObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,circleObject)
+         });
           break;
         }
         case "triangle": {
@@ -1399,26 +1415,8 @@ export class Store {
           element.fabricObject = triangleObject;
           canvas.add(triangleObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != triangleObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,triangleObject)
+         });
           break;
         }
         case "line": {
@@ -1430,79 +1428,29 @@ export class Store {
           element.fabricObject = lineObject;
           canvas.add(lineObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != lineObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,lineObject)
+         });
           break;
         }
         case "octagon": {
           const octObject = new fabric.Polygon(
-            [
-              { x: 0, y: -50 },
-              { x: 35.4, y: -35.4 },
-              { x: 50, y: 0 },
-              { x: 35.4, y: 35.4 },
-              { x: 0, y: 50 },
-              { x: -35.4, y: 35.4 },
-              { x: -50, y: 0 },
-              { x: -35.4, y: -35.4 }
-            ],
+            this.extractPolygonPoints('octagon'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
               height: element.properties.height,
             });
+
           element.fabricObject = octObject;
           canvas.add(octObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != octObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,octObject)
+         });
           break;
         }
         case "pentagon": {
           const pentObject = new fabric.Polygon(
-            [
-              { x: 0, y: -50 },
-              { x: 50, y: -20 },
-              { x: 30, y: 40 },
-              { x: -30, y: 40 },
-              { x: -50, y: -20 }
-            ],
+            this.extractPolygonPoints('pentagon'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1511,38 +1459,13 @@ export class Store {
           element.fabricObject = pentObject;
           canvas.add(pentObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != pentObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,pentObject)
+         });
           break;
         }
         case "hexagon": {
           const hexObject = new fabric.Polygon(
-            [
-              { x: 0, y: -50 },
-              { x: 43.3, y: -25 },
-              { x: 43.3, y: 25 },
-              { x: 0, y: 50 },
-              { x: -43.3, y: 25 },
-              { x: -43.3, y: -25 }
-            ],
+            this.extractPolygonPoints('hexagon'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1551,36 +1474,13 @@ export class Store {
           element.fabricObject = hexObject;
           canvas.add(hexObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != hexObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,hexObject)
+         });
           break;
         }
         case "rhombus": {
           const rhoObject = new fabric.Polygon(
-            [
-              { x: 0, y: -50 },
-              { x: 50, y: 0 },
-              { x: 0, y: 50 },
-              { x: -50, y: 0 }
-            ],
+            this.extractPolygonPoints('rhombus'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1589,36 +1489,13 @@ export class Store {
           element.fabricObject = rhoObject;
           canvas.add(rhoObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != rhoObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,rhoObject)
+         });
           break;
         }
         case "trapezoid": {
           const traObject = new fabric.Polygon(
-            [
-              { x: -40, y: -50 },
-              { x: 40, y: -50 },
-              { x: 30, y: 50 },
-              { x: -30, y: 50 }
-            ],
+            this.extractPolygonPoints('trapezoid'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1627,36 +1504,13 @@ export class Store {
           element.fabricObject = traObject;
           canvas.add(traObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != traObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,traObject)
+         });
           break;
         }
         case "parallelogram": {
           const paraObject = new fabric.Polygon(
-            [
-              { x: 0, y: -50 },
-              { x: 80, y: -50 },
-              { x: 50, y: 50 },
-              { x: -30, y: 50 }
-            ],
+            this.extractPolygonPoints('parallelogram'),
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1665,26 +1519,8 @@ export class Store {
           element.fabricObject = paraObject;
           canvas.add(paraObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != paraObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,paraObject)
+         });
           break;
         }
         case "polygon": {
@@ -1694,16 +1530,6 @@ export class Store {
           
           const redrawnPolygonObject = new fabric.Polygon(
             JSON.parse(JSON.stringify(element.properties.points)),
-            // [
-            //   { x: 0, y: -50 },
-            //   { x: 35.4, y: -35.4 },
-            //   { x: 50, y: 0 },
-            //   { x: 35.4, y: 35.4 },
-            //   { x: 0, y: 50 },
-            //   { x: -35.4, y: 35.4 },
-            //   { x: -50, y: 0 },
-            //   { x: -35.4, y: -35.4 }
-            // ],
             {
               ...commonShapePropertiesForRefresh,
               width: element.properties.width,
@@ -1712,26 +1538,8 @@ export class Store {
           element.fabricObject = redrawnPolygonObject;
           canvas.add(redrawnPolygonObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != redrawnPolygonObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,redrawnPolygonObject)
+         });
           break;
         }
         case "ellipse": {
@@ -1746,26 +1554,8 @@ export class Store {
           element.fabricObject = elipObject;
           canvas.add(elipObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != elipObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,elipObject)
+         });
           break;
         }
         case "oval": {
@@ -1780,26 +1570,8 @@ export class Store {
           element.fabricObject = ovaObject;
           canvas.add(ovaObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != ovaObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,ovaObject)
+         });
           break;
         }
         case "star": {
@@ -1812,26 +1584,8 @@ export class Store {
           element.fabricObject = starObject;
           canvas.add(starObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != starObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,starObject)
+         });
           break;
         }
         case "heart": {
@@ -1844,26 +1598,8 @@ export class Store {
           element.fabricObject = heartObject;
           canvas.add(heartObject);
           canvas.on("object:modified", function (e) {
-            if (!e.target) return;
-            const target = e.target;
-            if (target != heartObject) return;
-            const placement = element.placement;
-            const newPlacement: Placement = {
-              ...placement,
-              x: target.left ?? placement.x,
-              y: target.top ?? placement.y,
-              rotation: target.angle ?? placement.rotation,
-              width: target.width ?? placement.width,
-              height: target.height ?? placement.height,
-              scaleX: target.scaleX ?? placement.scaleX,
-              scaleY: target.scaleY ?? placement.scaleY,
-            };
-            const newElement = {
-              ...element,
-              placement: newPlacement,
-            };
-            store?.updateEditorElement(newElement);
-          });
+            store.refreshShape(e,element,heartObject)
+         });
           break;
         }
         default: {
