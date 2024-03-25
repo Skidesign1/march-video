@@ -4,13 +4,17 @@ import { StoreContext } from "@/store";
 import { observer } from "mobx-react";
 import { ImageResource } from "../entity/ImageResource";
 import { UploadButton } from "../shared/UploadButton";
+import { uploadImageToCloudinary } from "@/utils/cloudinary";
 
 export const ImageResourcesPanel = observer(() => {
   const store = React.useContext(StoreContext);
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    store.addImageResource(URL.createObjectURL(file));
+    if (!file) return; 
+    const imgUrl = await uploadImageToCloudinary(file) ||''
+    // console.log(imgUrl)
+    // store.addImageResource(URL.createObjectURL(file));
+    store.addImageResource(imgUrl);
   };
   return (
     <>
@@ -27,7 +31,6 @@ export const ImageResourcesPanel = observer(() => {
           return <ImageResource key={image} image={image} index={index} />;
         })}
       </div>
-
     </>
   );
 });
