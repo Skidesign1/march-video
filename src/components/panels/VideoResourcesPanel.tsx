@@ -4,13 +4,19 @@ import { StoreContext } from "@/store";
 import { observer } from "mobx-react";
 import { VideoResource } from "../entity/VideoResource";
 import { UploadButton } from "../shared/UploadButton";
+import { uploadVideoToCloudinary } from "@/utils/cloudinary";
+
 
 export const VideoResourcesPanel = observer(() => {
   const store = React.useContext(StoreContext);
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    store.addVideoResource(URL.createObjectURL(file));
+    
+    // store.addVideoResource(URL.createObjectURL(file));
+    // const videoUrl = await uploadVideoToCloudinary(file)||''
+    // store.addVideoResource(videoUrl);
+    store.addVideoResource("https://res.cloudinary.com/ski-studio/video/upload/v1711436437/kxwzlmccvltiqgf3obtr.mp4");
   };
   return (
     <>
