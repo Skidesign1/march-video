@@ -14,9 +14,9 @@ export const VideoResourcesPanel = observer(() => {
     if (!file) return;
     
     // store.addVideoResource(URL.createObjectURL(file));
-    // const videoUrl = await uploadVideoToCloudinary(file)||''
-    // store.addVideoResource(videoUrl);
-    store.addVideoResource("https://res.cloudinary.com/ski-studio/video/upload/v1711436437/kxwzlmccvltiqgf3obtr.mp4");
+    const videoUrl = await uploadVideoToCloudinary(file)||''
+    store.addVideoResource(videoUrl);
+    // store.addVideoResource("https://res.cloudinary.com/ski-studio/video/upload/v1711436437/kxwzlmccvltiqgf3obtr.mp4");
   };
   return (
     <>
