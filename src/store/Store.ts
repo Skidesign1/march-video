@@ -356,6 +356,9 @@ export class Store {
         const imageObjects= jsonData.objects.filter((object:any)=>{
           return object.type==='coverImage' 
         })
+        const videoObjects= jsonData.objects.filter((object:any)=>{
+          return object.type==='coverVideo' 
+        })
         const likelyShapes=["line","triangle", "rect" , 'circle' ,'polygon']
         
         const rectObjects= jsonData.objects.filter((object:any)=>{
@@ -429,9 +432,40 @@ export class Store {
           );
           
         })
+        videoObjects.forEach((videoObject:any)=>{
+          const id = getUid();
+          this.addEditorElement(
+            {
+              id,
+              name: `Media(video) ${index + 1}`,
+              type: "video",
+              placement: {
+                x: videoObject.left,
+                y: videoObject.top,
+                width:videoObject.width,
+                height: videoObject.height,
+                rotation: videoObject.angle,
+                scaleX: videoObject.scaleX,
+                scaleY: videoObject.scaleY,
+              },
+              timeFrame: {
+                start: 0,
+                end: 30000,
+              },
+              properties: {
+                elementId: `video-${id}`,
+                src: videoObject.src,
+                effect: {
+                  type: "none",
+                }
+              },
+            },
+            );
+          
+        })
         
         console.log(jsonData.objects)
-        console.log(imageObjects)
+        console.log(videoObjects)
         
       }
   }
