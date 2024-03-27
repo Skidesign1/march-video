@@ -70,8 +70,15 @@ export class Store {
     makeAutoObservable(this);
   }
 
+
+  
   get currentTimeInMs() {
     return this.currentKeyFrame * 1000 / this.fps;
+  }
+
+  //method to convert proxy objects to jvscript objects  
+  deproxifyObject(proxyObject:any){
+    return JSON.parse(JSON.stringify(proxyObject))
   }
 
   setCurrentTimeInMs(time: number) {

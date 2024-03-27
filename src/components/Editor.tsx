@@ -144,7 +144,7 @@ export const Editor = observer(() => {
       <div className="flex  justify-between items-center  gap-2 py-3 bg-slate-200">
         <img className="h-[40px] " src='/Logo.png' alt="logo" />
         <button className="bg-purple-400 text-white p-4 cursor-pointer" onClick={() => store?.saveVideo()}>Save Video</button>
-        <button className="bg-purple-400 text-white p-4 cursor-pointer" onClick={() => store.addText({text:"testing",fontSize:24,fontWeight:400})}>text</button>
+        <button className="bg-purple-400 text-white p-4 cursor-pointer" onClick={() => console.log(store.deproxifyObject(store.editorElements))}>Log proxy to console</button>
       </div>
       <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] ">
         <div className="tile row-span-2 flex flex-col bg-slate-200">
