@@ -17,10 +17,11 @@ import axios from "axios";
 
 
 export const EditorWithStore = () => {
+  console.log("running store")
   const [store] = useState(new Store());
   const params = useParams()
   useEffect(() => {
-    
+    console.log("running store effect")
     const fetchTemplateInfo = async () => {
       try {
         
@@ -62,6 +63,7 @@ export const EditorWithStore = () => {
 }
 
 export const Editor = observer(() => {
+  
   const store = React.useContext(StoreContext);
   const params = useParams();
   const fetchedTemplate = store.fetchedTemplate; // Access fetched template from store
@@ -75,20 +77,10 @@ export const Editor = observer(() => {
     store.setPage(1)
     store.setPortrait(false)
   }
-
-  // useEffect(() => {
-  //   // Load canvas from fetched template only when it's available
-  //   if (fetchedTemplate) {
-  //     // store.setPage(1)
-  //     store?.canvas?.loadFromJSON(fetchedTemplate, function() {
-  //       store?.canvas?.renderAll();
-  //     });
-  //   }
-  // }, [fetchedTemplate]);
-
   
 
   useEffect(() => {
+    console.log("running observer effect")
     const canvas = store.portrait ? new fabric.Canvas("canvas", {
       height: 500,
       width: 400,
@@ -122,13 +114,6 @@ export const Editor = observer(() => {
     const redrawTemplateInfo = async () => {
       try {
           store.redrawFetchedTemplate(fetchedTemplate)
-          // canvas.loadFromJSON(fetchedTemplate, function() {
-          //   canvas.renderAll();
-          //   store.setCanvas(canvas);
-          //   // if(store.page>0){
-          //   //   store.addText({text:"testing",fontSize:24,fontWeight:400})
-          //   // }
-          // });
       } catch (error) {
         console.error('Error fetching template info:', error);
       }
@@ -144,7 +129,13 @@ export const Editor = observer(() => {
       <div className="flex  justify-between items-center  gap-2 py-3 bg-slate-200">
         <img className="h-[40px] " src='/Logo.png' alt="logo" />
         <button className="bg-purple-400 text-white p-4 cursor-pointer" onClick={() => store?.saveVideo()}>Save Video</button>
-        <button className="bg-purple-400 text-white p-4 cursor-pointer" onClick={() => store.addText({text:"testing",fontSize:24,fontWeight:400})}>text</button>
+        <button 
+        className="bg-purple-400 text-white p-4 cursor-pointer" 
+        onClick={() => console.log(store.deproxifyObject(store.editorElements))}
+        onDoubleClick={() => console.log(store.storeEditorElements(JSON.stringify(store.editorElements)))}
+        >
+          Log proxy to console
+        </button>
       </div>
       <div className="grid grid-rows-[500px_1fr_20px] grid-cols-[72px_300px_1fr_250px] ">
         <div className="tile row-span-2 flex flex-col bg-slate-200">

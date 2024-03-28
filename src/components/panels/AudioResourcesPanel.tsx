@@ -4,13 +4,18 @@ import { StoreContext } from "@/store";
 import { observer } from "mobx-react";
 import { AudioResource } from "../entity/AudioResource";
 import { UploadButton } from "../shared/UploadButton";
+import { uploadAudioToCloudinary } from "@/utils/cloudinary";
 
 export const AudioResourcesPanel = observer(() => {
   const store = React.useContext(StoreContext);
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async(event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    store.addAudioResource(URL.createObjectURL(file));
+    // const AudioUrl = await uploadAudioToCloudinary(file)||''
+    // store.addAudioResource(AudioUrl);
+    // console.log(URL.createObjectURL(file))
+    store.addAudioResource("https://res.cloudinary.com/ski-studio/video/upload/v1711457442/rqyeo5kjuysqr25cevfb.mp3");
+    // store.addAudioResource(URL.createObjectURL(file));
   };
   return (
     <>

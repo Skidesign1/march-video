@@ -8,6 +8,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 import { Gradient, Polygon, Triangle } from 'fabric/fabric-impl';
 import { Factory } from 'react';
+import fs from 'fs'
 
 export class Store {
   canvas: fabric.Canvas | null
@@ -70,8 +71,102 @@ export class Store {
     makeAutoObservable(this);
   }
 
+
+  
   get currentTimeInMs() {
     return this.currentKeyFrame * 1000 / this.fps;
+  }
+
+  setPolygonPoints(){
+  this.polygonData = {
+    polygonPoints:[
+      [
+        {
+        name:"pentagon",
+        dimensions:[
+        { x: 0, y: -50 },
+        { x: 50, y: -20 },
+        { x: 30, y: 40 },
+        { x: -30, y: 40 },
+        { x: -50, y: -20 }
+        ]
+      },
+        {
+        name:"hexagon",
+        dimensions:[
+          { x: 0, y: -50 },
+          { x: 43.3, y: -25 },
+          { x: 43.3, y: 25 },
+          { x: 0, y: 50 },
+          { x: -43.3, y: 25 },
+          { x: -43.3, y: -25 }
+        ]
+      },
+        {
+        name:"parallelogram",
+        dimensions:[
+          { x: 0, y: -50 },
+          { x: 80, y: -50 },
+          { x: 50, y: 50 },
+          { x: -30, y: 50 }
+        ]
+      },
+        {
+        name:"octagon",
+        dimensions:[
+          { x: 0, y: -50 },
+          { x: 35.4, y: -35.4 },
+          { x: 50, y: 0 },
+          { x: 35.4, y: 35.4 },
+          { x: 0, y: 50 },
+          { x: -35.4, y: 35.4 },
+          { x: -50, y: 0 },
+          { x: -35.4, y: -35.4 }
+        ]
+      },
+        {
+        name:"trapezoid",
+        dimensions:[
+          { x: -40, y: -50 },
+          { x: 40, y: -50 },
+          { x: 30, y: 50 },
+          { x: -30, y: 50 }
+        ]
+      },
+        {
+        name:"rhombus",
+        dimensions:[            
+            { x: 0, y: -50 },
+            { x: 50, y: 0 },
+            { x: 0, y: 50 },
+            { x: -50, y: 0 }
+        ]
+      },
+    ]]}
+
+  }
+  
+
+  //method to convert proxy objects to jvscript objects  
+  deproxifyObject(proxyObject:any){
+    return JSON.parse(JSON.stringify(proxyObject))
+  }
+
+  storeEditorElements(serializedData:string){
+    // Write the JSON string to a file
+    const editorElement = localStorage.getItem('editorItems')||''
+    const elements = JSON.parse(editorElement)
+    console.log(elements)
+    elements.forEach((element:EditorElement)=>{
+      this.addEditorElement(element)
+    })
+
+    // localStorage.setItem('editorItems',serializedData)
+    // fs.writeFileSync('data.json', serializedData);
+
+    // // Later, when you want to read the file and loop through the array of objects:
+    // const fileData = fs.readFileSync('data.json', 'utf-8');
+    // const parsedData = JSON.parse(fileData);
   }
 
   setCurrentTimeInMs(time: number) {
@@ -346,126 +441,17 @@ export class Store {
   }
 
   redrawFetchedTemplate(fetchedTemplate:string){
+    this.setPolygonPoints()
     if(fetchedTemplate){
-      const jsonData = JSON.parse(fetchedTemplate);
       
-      if(this.page>0){
-        const textObjects= jsonData.objects.filter((object:any)=>{
-          return object.type==='textbox' 
-        })
-        const imageObjects= jsonData.objects.filter((object:any)=>{
-          return object.type==='coverImage' 
-        })
-        const videoObjects= jsonData.objects.filter((object:any)=>{
-          return object.type==='coverVideo' 
-        })
-        const likelyShapes=["line","triangle", "rect" , 'circle' ,'polygon']
-        
-        const rectObjects= jsonData.objects.filter((object:any)=>{
-          return likelyShapes.includes(object.type)
+      
+      if(this.page>0){       
+        console.log(this.deproxifyObject(fetchedTemplate))
+        const fetchedVideoTemplate=this.deproxifyObject(fetchedTemplate)
+        fetchedVideoTemplate.forEach((element:EditorElement)=>{
+          this.re_addEditorElement(element)
         })
         
-        textObjects?.forEach((textObject:any)=>{
-          this.addText({
-              fill:textObject.fill,
-              left:textObject.left,
-              top:textObject.top,
-              scaleX:textObject.scaleX,
-              scaleY:textObject.scaleY,
-              angle:textObject.angle,
-              height:textObject.height,
-              width:textObject.width,
-              text: textObject.text,
-              fontSize: textObject.fontSize,
-              fontWeight: textObject.fontWeight,
-
-            })
-            // this.refreshElements(textObject.fill)
-        })
-        rectObjects?.forEach(({type,width,height,fill,stroke,strokeWidth,radius,scaleX,scaleY,angle,top,left,points}:any)=>{
-          this.addShape({
-            type,
-            width,
-            height,
-            fill,
-            stroke,
-            strokeWidth,
-            radius,
-            scaleX,
-            scaleY,
-            angle,
-            top,
-            points,
-            left
-          })
-        })
-        let index=0
-        imageObjects.forEach((imageObject:any)=>{
-          const id = getUid();
-          this.addEditorElement(
-
-            {
-              id,
-              name: `Media(image) ${index + 1}`,
-              type: "image",
-              placement: {
-                x: imageObject.left,
-                y: imageObject.top,
-                width: imageObject.width,
-                height: imageObject.height,
-                rotation: imageObject.angle,
-                scaleX: imageObject.scaleX,
-                scaleY: imageObject.scaleY,
-              },
-              timeFrame: {
-                start: 0,
-                end: this.maxTime,
-              },
-              properties: {
-                elementId: `image-${id}`,
-                src: imageObject.src,
-                effect: {
-                  type: "none",
-                }
-              },
-            },
-          );
-          
-        })
-        videoObjects.forEach((videoObject:any)=>{
-          const id = getUid();
-          this.addEditorElement(
-            {
-              id,
-              name: `Media(video) ${index + 1}`,
-              type: "video",
-              placement: {
-                x: videoObject.left,
-                y: videoObject.top,
-                width:videoObject.width,
-                height: videoObject.height,
-                rotation: videoObject.angle,
-                scaleX: videoObject.scaleX,
-                scaleY: videoObject.scaleY,
-              },
-              timeFrame: {
-                start: 0,
-                end: 30000,
-              },
-              properties: {
-                elementId: `video-${id}`,
-                src: videoObject.src,
-                effect: {
-                  type: "none",
-                }
-              },
-            },
-            );
-          
-        })
-        
-        console.log(jsonData.objects)
-        console.log(videoObjects)
         
       }
   }
@@ -514,6 +500,7 @@ export class Store {
 
 
   addEditorElement(editorElement: EditorElement) {
+    this.setPolygonPoints()
     this.setEditorElements([...this.editorElements, editorElement]);
     
     if(editorElement.type==='text'||"rect"){
@@ -524,6 +511,20 @@ export class Store {
       this.refreshElements()
     }
     this.setSelectedElement(this.editorElements[this.editorElements.length - 1]);
+  }
+
+  re_addEditorElement(editorElement: EditorElement) {
+    this.setPolygonPoints()
+    this.setEditorElements([...this.editorElements, editorElement]);
+    
+    // if(editorElement.type==='text'||"rect"){
+    //   this.refreshElements(editorElement.placement.fill??"white");
+    //   console.log("editor element colour is ", editorElement.placement.fill)
+    // }
+    // else{
+    //   this.refreshElements()
+    // }
+    // this.setSelectedElement(this.editorElements[this.editorElements.length - 1]);
   }
 
   removeEditorElement(id: string) {
@@ -759,71 +760,7 @@ export class Store {
     points?:[]
   }) {
 
-    this.polygonData = {
-      polygonPoints:[
-        [
-          {
-          name:"pentagon",
-          dimensions:[
-          { x: 0, y: -50 },
-          { x: 50, y: -20 },
-          { x: 30, y: 40 },
-          { x: -30, y: 40 },
-          { x: -50, y: -20 }
-          ]
-        },
-          {
-          name:"hexagon",
-          dimensions:[
-            { x: 0, y: -50 },
-            { x: 43.3, y: -25 },
-            { x: 43.3, y: 25 },
-            { x: 0, y: 50 },
-            { x: -43.3, y: 25 },
-            { x: -43.3, y: -25 }
-          ]
-        },
-          {
-          name:"parallelogram",
-          dimensions:[
-            { x: 0, y: -50 },
-            { x: 80, y: -50 },
-            { x: 50, y: 50 },
-            { x: -30, y: 50 }
-          ]
-        },
-          {
-          name:"octagon",
-          dimensions:[
-            { x: 0, y: -50 },
-            { x: 35.4, y: -35.4 },
-            { x: 50, y: 0 },
-            { x: 35.4, y: 35.4 },
-            { x: 0, y: 50 },
-            { x: -35.4, y: 35.4 },
-            { x: -50, y: 0 },
-            { x: -35.4, y: -35.4 }
-          ]
-        },
-          {
-          name:"trapezoid",
-          dimensions:[
-            { x: -40, y: -50 },
-            { x: 40, y: -50 },
-            { x: 30, y: 50 },
-            { x: -30, y: 50 }
-          ]
-        },
-          {
-          name:"rhombus",
-          dimensions:[            
-              { x: 0, y: -50 },
-              { x: 50, y: 0 },
-              { x: 0, y: 50 },
-              { x: -50, y: 0 }
-          ]
-        },
-      ]]}
+    this.setPolygonPoints()
     const id = getUid();
     const index = this.editorElements.length;
     const canvas = document.getElementById("credrawnShapeColornvas") as HTMLCanvasElement;
@@ -1130,18 +1067,7 @@ export class Store {
     if (!canvas) return;
     const userId = window.sessionStorage.getItem("userId")
     const jsonData= {
-      templateFile: JSON.stringify(canvas.toJSON([
-        "transparentCorners",
-        "cornerColor",
-        "strokeWidth",
-        "cornerStrokeColor",
-        "borderColor",
-        "cornerStyle",
-        "name",
-        "category",
-        "level",
-        "splitByGrapheme",
-      ])),
+      templateFile: this.deproxifyObject(this.editorElements),
       Name: this.templateInfo?.Name,
       Category: this.templateInfo?.Category,
       isPublished:  this.templateInfo?.isPublished,
@@ -1233,9 +1159,8 @@ export class Store {
 
   refreshElements(currentColour?:(string | undefined)) {
     
-    
-
     const store = this;
+    store.setPolygonPoints()
     if (!store.canvas) return;
     const canvas = store.canvas;
     store.canvas.remove(...store.canvas.getObjects());
