@@ -52,6 +52,36 @@ export const uploadVideoToCloudinary = async (file: Blob): Promise<string | null
 };
 
 
+
+export const fetchUrlsCloudinary = async () => {
+    const url = `https://skyestudio-backend.onrender.com/extract-cloudinary-urls`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            // headers: {
+            //     'Authorization': `Basic ${btoa(`${process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY}:${process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET}`)}`
+            // }
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        if (data && data.length > 0 && data[0].cloudinaryURLs) {
+            return data[0].cloudinaryURLs;
+        } else {
+            throw new Error('No data or invalid data format received');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
+};
+
+
+
 // Function to upload video to Cloudinary
 export const uploadAudioToCloudinary = async (file: Blob): Promise<string | null> => {
     try {
